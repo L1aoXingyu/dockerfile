@@ -1,0 +1,8 @@
+{
+  "python.jediEnabled": false,
+  "clangd.path": "clangd-10",
+  "clangd.arguments": ["-cross-file-rename"],
+  "languageserver": {
+  }
+}
+

@@ -1,0 +1,53 @@
+#! /usr/bin/env bash
+
+declare top_dir
+
+while true; do
+    top_dir=$(git -C "$git_test_dir" rev-parse --show-toplevel) || \
+        error_exit "You need to be in the git repository to run this script."
+
+    # Try to handle git worktree.
+    # The best way to deal both with git submodules and worktrees would be to
+    # use --show-superproject-working-tree, but it's not supported in git 2.7.4
+    # which is shipped in Ubuntu 16.04.
+    declare git_common_dir
+    if git_common_dir=$(git -C "$git_test_dir" rev-parse --git-common-dir 2>/dev/null); then
+        # The common dir could be relative, so we make it absolute.
+        git_common_dir=$(cd "$git_test_dir" && realpath "$git_common_dir")
+        declare maybe_top_dir
+        maybe_top_dir=$(realpath "$git_common_dir/..")
+        if [ -e "$maybe_top_dir/.git" ]; then
+            # We are not in a submodules, otherwise common dir would have been
+            # something like PROJ/.git/modules/SUBMODULE and there would not be
+            # a .git directory in PROJ/.git/modules/.
+            top_dir="$maybe_top_dir"
+        fi
+    fi
+
+    [ -e "$top_dir/.git" ] || \
+        error_exit "No .git directory in $top_dir."
+
+    if [ -d "$top_dir/.git" ]; then
+        # We are done! top_dir is the root git directory.
+        break
+    elif [ -f "$top_dir/.git" ]; then
+        # We are in a submodule.
+        git_test_dir="$git_test_dir/.."
+    fi
+done
+
+readonly top_dir
+
+hook_path="$top_dir/.git/hooks/pre-commit"
+readonly hook_path
+
+if [[ -f $hook_path ]] && grep -q "# clang-tidy hook" $hook_path; then
+    error_exit "It seems that this hook has been installed. Remove the lines in $hook_path?"
+else
+    echo "# clang-tidy hook" >> $hook_path
+    echo 'clangtidy-git-hook' >> $hook_path
+    chmod +x $hook_path
+    if [[ ! -f $top_dir/.clang-tidy ]]; then
+        cp /usr/share/default_clang_tidy $top_dir/.clang-tidy
+    fi
+fi
