@@ -1,0 +1,16 @@
+[alias]
+    st = status
+    ci = commit
+    co = checkout
+    br = branch
+    cp = cherry-pick
+	dt = difftool
+	d = diff
+[push]
+	default = simple
+	followTags = true
+[diff]
+	tool = vimdiff
+[difftool]
+	prompt = false
+[core]
