@@ -11,7 +11,7 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev gdb tzdata zip libstdc++-7-dev tree && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3.8 python3.8-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3.8-venv libcurl4-openssl-dev libopenblas-dev gdb tzdata zip libstdc++-7-dev tree && \
     apt clean
 
 RUN locale-gen "en_US.UTF-8"
@@ -37,8 +37,10 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-lin
 
 # Install pip
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	python3 get-pip.py && \
+	python3.8 get-pip.py && \
 	rm get-pip.py
+
+RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.8 /usr/bin/python3
 
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake==3.14.4 pygments pynvim thefuck pylint flake8 autopep8 mypy
@@ -171,15 +173,7 @@ COPY default_clang_tidy /usr/share/default_clang_tidy
 COPY default_clang_format /usr/share/default_clang_format
 
 # All python libraries
-# RUN pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
-RUN wget https://download.pytorch.org/whl/cu101/torch-1.6.0%2Bcu101-cp36-cp36m-linux_x86_64.whl 
-RUN pip install torch-1.6.0+cu101-cp36-cp36m-linux_x86_64.whl
-RUN rm torch-1.6.0+cu101-cp36-cp36m-linux_x86_64.whl
-RUN wget https://download.pytorch.org/whl/cu101/torchvision-0.7.0%2Bcu101-cp36-cp36m-linux_x86_64.whl && pip install torchvision-0.7.0+cu101-cp36-cp36m-linux_x86_64.whl && rm -rf torchvision-0.7.0+cu101-cp36-cp36m-linux_x86_64.whl
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat faiss-gpu ipdb h5py
-
-RUN pip install 'ray[tune]'
-
-RUN git clone https://github.com/NVIDIA/apex && cd apex && pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+RUN pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat faiss-gpu ipdb h5py matplotlib bcolz mxnet 'ray[tune]'
 
 CMD ["zsh"]
