@@ -146,7 +146,7 @@ COPY --chown=dev:dev .gitconfig /home/dev/
 COPY --chown=dev:dev .vimrc /home/dev/
 COPY --chown=dev:dev .vimrc.local /home/dev/
 COPY --chown=dev:dev coc-settings.json /home/dev/.config/nvim/
-RUN mkdir -p /home/dev/.vim/autoload
+RUN mkdir -p /home/dev/.vim/autoload 
 COPY --chown=dev:dev plug.vim /home/dev/.vim/autoload/ 
 # RUN curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 RUN nvim +'PlugInstall --sync' +qa
@@ -174,6 +174,6 @@ COPY default_clang_format /usr/share/default_clang_format
 
 # All python libraries
 RUN pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat faiss-gpu ipdb h5py matplotlib bcolz mxnet 'ray[tune]'
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat faiss-gpu ipdb h5py matplotlib bcolz 
 
 CMD ["zsh"]
