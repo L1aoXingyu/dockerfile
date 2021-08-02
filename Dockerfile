@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-cudnn7-devel
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
 
 # Uncomment it if you are in China
 RUN sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
@@ -11,7 +11,7 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3.8 python3.8-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3.8-venv libcurl4-openssl-dev libopenblas-dev gdb tzdata zip libstdc++-7-dev tree && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev valgrind tzdata zip libstdc++-7-dev tree && \
     apt clean
 
 RUN locale-gen "en_US.UTF-8"
@@ -37,13 +37,16 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-lin
 
 # Install pip
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	python3.8 get-pip.py && \
+	python3 get-pip.py && \
 	rm get-pip.py
-
-RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.8 /usr/bin/python3
 
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake==3.14.4 pygments pynvim thefuck pylint flake8 autopep8 mypy
+
+# Install cgdb
+RUN apt -o Acquire::http::proxy=false update && \
+    apt -o Acquire::http::proxy=false install -y flex
+RUN git clone git://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./configure --prefix=/usr/local && make && make install
 
 # RUN git clone https://github.com/MaskRay/ccls --recursive --depth=1 && \
     # mkdir ccls/build && cd ccls/build && CC=clang-8 CXX=clang++-8 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/ -GNinja .. && \
@@ -173,7 +176,6 @@ COPY default_clang_tidy /usr/share/default_clang_tidy
 COPY default_clang_format /usr/share/default_clang_format
 
 # All python libraries
-RUN pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat faiss-gpu ipdb h5py matplotlib bcolz 
 
 CMD ["zsh"]
