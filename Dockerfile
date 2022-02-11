@@ -117,7 +117,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN echo "export LC_ALL=en_US.UTF-8" >> /etc/zsh/zshenv && echo "export LANG=en_US.UTF-8" >> /etc/zsh/zshenv
 
-ARG DEV_UID=1000
+ARG DEV_UID=1103
 
 # Add user "dev"
 RUN useradd dev -m -u ${DEV_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
@@ -175,7 +175,27 @@ RUN git clone --depth 1 https://github.com/junegunn/fzf.git /home/dev/.fzf && /h
 COPY default_clang_tidy /usr/share/default_clang_tidy
 COPY default_clang_format /usr/share/default_clang_format
 
+# Install miniconda
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+     /bin/bash ~/miniconda.sh -b -p /opt/conda
+
+# Put conda in path so we can use conda activate
+ENV PATH=$CONDA_DIR/bin:$PATH
+
 # All python libraries
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat faiss-gpu ipdb h5py matplotlib bcolz 
+RUN conda create -n dev_env python=3.8 && conda activate dev_env && pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat ipdb h5py matplotlib bcolz 
+
+# Install torch
+# COPY --chown=dev:dev torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/ 
+# COPY --chown=dev:dev torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/
+# RUN pip install torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl && pip install torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl
+
+USER root
+# Install oneflow compile dependency
+RUN apt -o Acquire::http::proxy=false update && \
+    apt -o Acquire::http::proxy=false install -y libopenblas-dev nasm g++ gcc python3-pip cmake autoconf libtool
+
+USER dev
 
 CMD ["zsh"]
