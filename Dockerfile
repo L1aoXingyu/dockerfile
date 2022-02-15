@@ -11,7 +11,7 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clangd-12 clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clangd-12 clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
     apt clean
 
 RUN locale-gen "en_US.UTF-8"
@@ -65,17 +65,17 @@ RUN git clone git://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./con
 RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
 
 # Install tmux
-RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
-wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz &&    \
-mkdir tmux-unzipped &&    \
-tar xf tmux-${TMUX_VERSION}.tar.gz -C tmux-unzipped &&     \
-rm -f tmux-${TMUX_VERSION}.tar.gz &&       \
-pushd tmux-unzipped/tmux-${TMUX_VERSION} &&        \
-./configure &&     \
-make -j`nproc`&&        \
-make install &&       \
-popd &&        \
-rm -rf tmux-unzipped"]
+# RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
+# wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz &&    \
+# mkdir tmux-unzipped &&    \
+# tar xf tmux-${TMUX_VERSION}.tar.gz -C tmux-unzipped &&     \
+# rm -f tmux-${TMUX_VERSION}.tar.gz &&       \
+# pushd tmux-unzipped/tmux-${TMUX_VERSION} &&        \
+# ./configure &&     \
+# make -j`nproc`&&        \
+# make install &&       \
+# popd &&        \
+# rm -rf tmux-unzipped"]
 # -----------
 
 # Install gtags
