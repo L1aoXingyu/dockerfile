@@ -11,7 +11,7 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev valgrind tzdata zip libstdc++-7-dev tree && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clangd-12 clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
     apt clean
 
 RUN locale-gen "en_US.UTF-8"
@@ -36,12 +36,12 @@ RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip && unzip ninja-linux.zip -d ninja && cp ninja/ninja /usr/bin && rm -rf ninja
 
 # Install pip
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	python3 get-pip.py && \
-	rm get-pip.py
+# RUN wget https://bootstrap.pypa.io/get-pip.py && \
+	# python3 get-pip.py && \
+	# rm get-pip.py
 
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake==3.14.4 pygments pynvim thefuck pylint flake8 autopep8 mypy
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy
 
 # Install cgdb
 RUN apt -o Acquire::http::proxy=false update && \
@@ -196,21 +196,14 @@ RUN conda update -n base -c defaults conda
 
 # Make RUN commands use the new environment:
 # SHELL ["conda", "run", "-n", "dev_env", "/bin/zsh", "-c"]
-RUN conda install tensorboard opencv cython yacs termcolor scikit-learn tabulate \
-    gdown gpustat ipdb h5py matplotlib bcolz -y
+RUN conda install pip
 
-# RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorboard opencv-python cython yacs termcolor scikit-learn tabulate gdown gpustat ipdb h5py matplotlib bcolz 
+# Install cmake via pip, install pygments for gtags, pynvim for neovim
+RUN /home/dev/miniconda/bin/python -m install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
 
 # Install torch
 # COPY --chown=dev:dev torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/ 
 # COPY --chown=dev:dev torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/
 # RUN pip install torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl && pip install torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl
-
-USER root
-# Install oneflow compile dependency
-RUN apt -o Acquire::http::proxy=false update && \
-    apt -o Acquire::http::proxy=false install -y libopenblas-dev nasm g++ gcc python3-pip cmake autoconf libtool
-
-USER dev
 
 CMD ["zsh"]
