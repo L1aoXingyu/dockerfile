@@ -11,10 +11,8 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clangd-12 clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
     apt clean
-
-RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
 
 RUN locale-gen "en_US.UTF-8"
 
@@ -42,9 +40,6 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-lin
 	# python3 get-pip.py && \
 	# rm get-pip.py
 
-# Install cmake via pip, install pygments for gtags, pynvim for neovim
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy
-
 # Install cgdb
 RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y flex
@@ -64,7 +59,9 @@ RUN git clone git://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./con
 #
 # RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - && apt -o Acquire::http::proxy=false update && apt install -y clang-format-8 clang-tidy-8 clang-tools-8 && cd /usr/bin && ln -s clangd-8 clangd && ln -s clang-tidy-8 clang-tidy && ln -s clang-tidy-diff-8.py clang-tidy-diff.py && ln -s clang-format-diff-8 clang-format-diff && ln -s clang-format-8 clang-format && apt clean
 
-RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
+# RUN git config --global http.proxy xxx && git config --global https.proxy 
+
+# RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
 
 # Install tmux
 # RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
@@ -81,25 +78,25 @@ RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage
 # -----------
 
 # Install gtags
-RUN ["/bin/bash", "-c", "GTAGS_VERSION=6.6.3 &&     \
-wget http://tamacom.com/global/global-$GTAGS_VERSION.tar.gz &&  \
-mkdir gtags-unzipped && \
-tar xf global-$GTAGS_VERSION.tar.gz -C gtags-unzipped && \
-pushd gtags-unzipped/global-$GTAGS_VERSION &&  \
-./configure &&  \
-make && \
-make install && \
-popd && \
-rm -rf gtags-unzipped"]
+# RUN ["/bin/bash", "-c", "GTAGS_VERSION=6.6.3 &&     \
+# wget http://tamacom.com/global/global-$GTAGS_VERSION.tar.gz &&  \
+# mkdir gtags-unzipped && \
+# tar xf global-$GTAGS_VERSION.tar.gz -C gtags-unzipped && \
+# pushd gtags-unzipped/global-$GTAGS_VERSION &&  \
+# ./configure &&  \
+# make && \
+# make install && \
+# popd && \
+# rm -rf gtags-unzipped"]
 
 # Install ctags
-RUN ["/bin/bash", "-c", "git clone --depth 1 https://github.com/universal-ctags/ctags.git && \
-cd ctags && \
-./autogen.sh  && \
-./configure && \
-make -j$(nproc) && \
-make install && \
-rm -rf ctags"]
+# RUN ["/bin/bash", "-c", "git clone --depth 1 https://github.com/universal-ctags/ctags.git && \
+# cd ctags && \
+# ./autogen.sh  && \
+# ./configure && \
+# make -j$(nproc) && \
+# make install && \
+# rm -rf ctags"]
 
 RUN ["/bin/bash", "-c", "mkdir git-lfs && curl -L https://github.com/git-lfs/git-lfs/releases/download/v2.8.0/git-lfs-linux-amd64-v2.8.0.tar.gz | tar xzf - -C git-lfs && pushd git-lfs && ./install.sh && popd && rm -rf git-lfs"]
 
@@ -122,7 +119,7 @@ RUN echo "export LC_ALL=en_US.UTF-8" >> /etc/zsh/zshenv && echo "export LANG=en_
 ARG USER_UID=1000
 RUN echo $USER_UID
 # Add user "dev"
-RUN useradd dev -m -u ${DEV_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
+RUN useradd dev -m -u ${USER_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
 
 # change shell to zsh for user dev
 RUN chsh -s `which zsh` dev
@@ -154,8 +151,8 @@ COPY --chown=dev:dev coc-settings.json /home/dev/.config/nvim/
 RUN mkdir -p /home/dev/.vim/autoload 
 COPY --chown=dev:dev plug.vim /home/dev/.vim/autoload/ 
 # RUN curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-RUN nvim +'PlugInstall --sync' +qa
-RUN nvim +'CocInstall coc-json coc-python coc-highlight coc-snippets coc-lists coc-git coc-yank coc-java coc-clangd coc-cmake -sync' +qa
+# RUN nvim +'PlugInstall --sync' +qa
+# RUN nvim +'CocInstall coc-json coc-python coc-highlight coc-snippets coc-lists coc-git coc-yank coc-java coc-clangd coc-cmake -sync' +qa
  
 RUN git clone --depth 1 https://github.com/gpakosz/.tmux.git /home/dev/.tmux/ &&    \
 ln -s /home/dev/.tmux/.tmux.conf /home/dev/.tmux.conf
@@ -193,7 +190,7 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
 
 # Update conda
-RUN conda update -n base -c defaults conda
+# RUN conda update -n base -c defaults conda
 # All python libraries
 
 # Make RUN commands use the new environment:
@@ -201,7 +198,7 @@ RUN conda update -n base -c defaults conda
 RUN conda install pip
 
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
-RUN /home/dev/miniconda/bin/python -m install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
+RUN /home/dev/miniconda/bin/python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
 
 # Install torch
 # COPY --chown=dev:dev torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/ 
