@@ -14,6 +14,8 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clangd-12 clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
     apt clean
 
+RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
+
 RUN locale-gen "en_US.UTF-8"
 
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
@@ -117,8 +119,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN echo "export LC_ALL=en_US.UTF-8" >> /etc/zsh/zshenv && echo "export LANG=en_US.UTF-8" >> /etc/zsh/zshenv
 
-ARG DEV_UID=1103
-
+ARG USER_UID=1000
+RUN echo $USER_UID
 # Add user "dev"
 RUN useradd dev -m -u ${DEV_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
 
