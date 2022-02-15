@@ -61,7 +61,7 @@ RUN git clone git://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./con
 
 # RUN git config --global http.proxy xxx && git config --global https.proxy 
 
-# RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
+RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
 
 # Install tmux
 # RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
