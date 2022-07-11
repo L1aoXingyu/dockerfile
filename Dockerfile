@@ -31,7 +31,7 @@ RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 # ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/share/clang/clang-format-diff.py && \
 # popd && \
 # rm /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz"]
-# 
+#
 # Install Ninja
 RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip && unzip ninja-linux.zip -d ninja && cp ninja/ninja /usr/bin && rm -rf ninja
 
@@ -59,7 +59,7 @@ RUN git clone git://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./con
 #
 # RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - && apt -o Acquire::http::proxy=false update && apt install -y clang-format-8 clang-tidy-8 clang-tools-8 && cd /usr/bin && ln -s clangd-8 clangd && ln -s clang-tidy-8 clang-tidy && ln -s clang-tidy-diff-8.py clang-tidy-diff.py && ln -s clang-format-diff-8 clang-format-diff && ln -s clang-format-8 clang-format && apt clean
 
-# RUN git config --global http.proxy xxx && git config --global https.proxy 
+# RUN git config --global http.proxy xxx && git config --global https.proxy
 
 RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
 
@@ -116,16 +116,16 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN echo "export LC_ALL=en_US.UTF-8" >> /etc/zsh/zshenv && echo "export LANG=en_US.UTF-8" >> /etc/zsh/zshenv
 
-ARG USER_UID=1000
-RUN echo $USER_UID
+# ARG USER_UID=1000
+# RUN echo $USER_UID
 # Add user "dev"
-RUN useradd dev -m -u ${USER_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
+# RUN useradd dev -m -u ${USER_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
 
 # change shell to zsh for user dev
-RUN chsh -s `which zsh` dev
+RUN chsh -s `which zsh` root
 
-USER dev
-WORKDIR /home/dev/
+USER root
+WORKDIR /root/
 
 # Install yarn
 RUN curl -o- -L https://yarnpkg.com/install.sh | bash
@@ -134,50 +134,50 @@ RUN curl -o- -L https://yarnpkg.com/install.sh | bash
 RUN $ sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 
 # Install autosuggestions and syntax-highlighting
-RUN git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions /home/dev/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-RUN git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git /home/dev/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+RUN git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+RUN git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
 # Add nvim config to share config with vim
-RUN mkdir -p /home/dev/.config/nvim/ && \
-echo "set runtimepath^=~/.vim runtimepath+=~/.vim/after" >> /home/dev/.config/nvim/init.vim && \
-echo "let &packpath=&runtimepath" >> /home/dev/.config/nvim/init.vim && \
-echo "source ~/.vimrc" >> /home/dev/.config/nvim/init.vim
+RUN mkdir -p /root/.config/nvim/ && \
+echo "set runtimepath^=~/.vim runtimepath+=~/.vim/after" >> /root/.config/nvim/init.vim && \
+echo "let &packpath=&runtimepath" >> /root/.config/nvim/init.vim && \
+echo "source ~/.vimrc" >> /root/.config/nvim/init.vim
 # -----------
 
-COPY --chown=dev:dev .gitconfig /home/dev/
-COPY --chown=dev:dev .vimrc /home/dev/
-COPY --chown=dev:dev .vimrc.local /home/dev/
-COPY --chown=dev:dev coc-settings.json /home/dev/.config/nvim/
-RUN mkdir -p /home/dev/.vim/autoload 
-COPY --chown=dev:dev plug.vim /home/dev/.vim/autoload/ 
+COPY --chown=root:root .gitconfig /root/
+COPY --chown=root:root .vimrc /root/
+COPY --chown=root:root .vimrc.local /root/
+COPY --chown=root:root coc-settings.json /root/.config/nvim/
+RUN mkdir -p /root/.vim/autoload
+COPY --chown=root:root plug.vim /root/.vim/autoload/
 # RUN curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 # RUN nvim +'PlugInstall --sync' +qa
 # RUN nvim +'CocInstall coc-json coc-python coc-highlight coc-snippets coc-lists coc-git coc-yank coc-java coc-clangd coc-cmake -sync' +qa
- 
-RUN git clone --depth 1 https://github.com/gpakosz/.tmux.git /home/dev/.tmux/ &&    \
-ln -s /home/dev/.tmux/.tmux.conf /home/dev/.tmux.conf
-COPY --chown=dev:dev .tmux.conf.local /home/dev/
+
+RUN git clone --depth 1 https://github.com/gpakosz/.tmux.git /root/.tmux/ &&    \
+ln -s /root/.tmux/.tmux.conf /root/.tmux.conf
+COPY --chown=root:root .tmux.conf.local /root/
 
 # Set PyPI mirror
-RUN mkdir -p /home/dev/.config/pip && \
-echo "[global]" >> /home/dev/.config/pip/pip.conf && \
-echo "index-url = https://mirrors.ustc.edu.cn/pypi/web/simple" >> /home/dev/.config/pip/pip.conf && \
-echo "format = columns" >> /home/dev/.config/pip/pip.conf
+RUN mkdir -p /root/.config/pip && \
+echo "[global]" >> /root/.config/pip/pip.conf && \
+echo "index-url = https://mirrors.ustc.edu.cn/pypi/web/simple" >> /root/.config/pip/pip.conf && \
+echo "format = columns" >> /root/.config/pip/pip.conf
 # -----------
 
 # Copy .zshrc
-COPY --chown=dev:dev .zshrc /home/dev/.zshrc
+COPY --chown=root:root .zshrc /root/.zshrc
 # Install fzf last so that the modified .zsrc will not be overwritted
-RUN git clone --depth 1 https://github.com/junegunn/fzf.git /home/dev/.fzf && /home/dev/.fzf/install --key-bindings --completion --update-rc
+RUN git clone --depth 1 https://github.com/junegunn/fzf.git /root/.fzf && /root/.fzf/install --key-bindings --completion --update-rc
 # -----------
 
 COPY default_clang_tidy /usr/share/default_clang_tidy
 COPY default_clang_format /usr/share/default_clang_format
 
 # Install miniconda
-ENV CONDA_DIR /home/dev/miniconda
+ENV CONDA_DIR /root/miniconda
 RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-     /bin/bash ~/miniconda.sh -b -p /home/dev/miniconda
+     /bin/bash ~/miniconda.sh -b -p /root/miniconda
 
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH
@@ -198,11 +198,18 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/
 RUN conda install pip
 
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
-RUN /home/dev/miniconda/bin/python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
+RUN /root/miniconda/bin/python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
 
 # Install torch
-# COPY --chown=dev:dev torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/ 
+# COPY --chown=dev:dev torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/
 # COPY --chown=dev:dev torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/
 # RUN pip install torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl && pip install torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl
 
-CMD ["zsh"]
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+RUN echo 'root:aGVsbG9yaGlubw@2022' |chpasswd
+RUN sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+RUN mkdir /root/.ssh
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
