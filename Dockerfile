@@ -43,9 +43,9 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-lin
 	# rm get-pip.py
 
 # Install cgdb
-RUN apt -o Acquire::http::proxy=false update && \
-    apt -o Acquire::http::proxy=false install -y flex
-RUN git clone https://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./configure --prefix=/usr/local && make && make install
+# RUN apt -o Acquire::http::proxy=false update && \
+#     apt -o Acquire::http::proxy=false install -y flex
+# RUN git clone https://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./configure --prefix=/usr/local && make && make install
 
 # RUN git clone https://github.com/MaskRay/ccls --recursive --depth=1 && \
     # mkdir ccls/build && cd ccls/build && CC=clang-8 CXX=clang++-8 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/ -GNinja .. && \
@@ -133,7 +133,7 @@ WORKDIR /root/
 RUN curl -o- -L https://yarnpkg.com/install.sh | bash
 
 # Install oh-my-zsh
-RUN $ sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+RUN sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 
 # Install autosuggestions and syntax-highlighting
 RUN git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
