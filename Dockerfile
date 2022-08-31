@@ -151,14 +151,6 @@ COPY --chown=root:root .vimrc /root/
 COPY --chown=root:root .vimrc.local /root/
 COPY --chown=root:root coc-settings.json /root/.config/nvim/
 RUN mkdir -p /root/.vim/autoload
-COPY --chown=root:root plug.vim /root/.vim/autoload/
-# RUN curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-# RUN nvim +'PlugInstall --sync' +qa
-# RUN nvim +'CocInstall coc-json coc-python coc-highlight coc-snippets coc-lists coc-git coc-yank coc-java coc-clangd coc-cmake -sync' +qa
-
-RUN git clone --depth 1 https://github.com/gpakosz/.tmux.git /root/.tmux/ &&    \
-ln -s /root/.tmux/.tmux.conf /root/.tmux.conf
-COPY --chown=root:root .tmux.conf.local /root/
 
 # Set PyPI mirror
 RUN mkdir -p /root/.config/pip && \
@@ -193,19 +185,8 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/
 
 # Update conda
 # RUN conda update -n base -c defaults conda
-# All python libraries
 
-# Make RUN commands use the new environment:
-# SHELL ["conda", "run", "-n", "dev_env", "/bin/zsh", "-c"]
 RUN conda install pip
-
-# Install cmake via pip, install pygments for gtags, pynvim for neovim
-RUN /root/miniconda/bin/python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
-
-# Install torch
-# COPY --chown=dev:dev torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/
-# COPY --chown=dev:dev torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl /home/dev/
-# RUN pip install torch-1.9.0+cu111-cp36-cp36m-linux_x86_64.whl && pip install torchvision-0.10.0+cu111-cp36-cp36m-linux_x86_64.whl
 
 RUN apt-get update && apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
@@ -215,3 +196,15 @@ RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
 RUN mkdir /root/.ssh
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
+
+# Create python3.8
+RUN conda create -n d2 python=3.8 
+
+# Make RUN commands use the new environment:
+SHELL ["conda", "run", "-n", "d2", "/bin/zsh", "-c"]
+
+# Install cmake via pip, install pygments for gtags, pynvim for neovim
+RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
+
+# Install torch
+RUN python3 -m pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cu113
