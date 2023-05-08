@@ -1,5 +1,7 @@
 # fastreid_docker
 
 ```bash
-docker build -t=fastreid_cuda10.1_pytorch1.6:0.3 fastreid_docker
+docker build -t=lxy_dev:v0.4 dockerfile
+
+docker run --privileged --name lxy_dev -d -v /mnt:/mnt -v /data:/data --gpus all --user root --ipc host --net host -it lxy_dev:v0.4
 ```
