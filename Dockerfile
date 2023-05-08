@@ -1,11 +1,10 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu18.04
 
 # Uncomment it if you are in China
 RUN sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 
 RUN rm /etc/apt/sources.list.d/cuda.list
-RUN rm /etc/apt/sources.list.d/nvidia-ml.list
 
 ENV DEBIAN_FRONTEND noninteractive
 # Add common tools available in apt repository. We choose not to support python2
@@ -20,37 +19,8 @@ RUN locale-gen "en_US.UTF-8"
 
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
-# RUN ["/bin/bash", "-c", "aria2c -s16 -x16 http://releases.llvm.org/8.0.0/clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz && \
-# tar xf /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz && \
-# pushd /usr/bin/ && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/clangd && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/clang clang-8 && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/clang++ clang++-8 && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/clang-format && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/clang-tidy && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/bin/git-clang-format && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/share/clang/clang-tidy-diff.py && \
-# ln -s /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/share/clang/clang-format-diff.py && \
-# popd && \
-# rm /clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz"]
-#
 # Install Ninja
 RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip && unzip ninja-linux.zip -d ninja && cp ninja/ninja /usr/bin && rm -rf ninja
-
-# Install pip
-# RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	# python3 get-pip.py && \
-	# rm get-pip.py
-
-# Install cgdb
-# RUN apt -o Acquire::http::proxy=false update && \
-#     apt -o Acquire::http::proxy=false install -y flex
-# RUN git clone https://github.com/cgdb/cgdb.git && cd cgdb && ./autogen.sh && ./configure --prefix=/usr/local && make && make install
-
-# RUN git clone https://github.com/MaskRay/ccls --recursive --depth=1 && \
-    # mkdir ccls/build && cd ccls/build && CC=clang-8 CXX=clang++-8 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04/ -GNinja .. && \
-    # cmake --build . -- -j`nproc` && \
-    # ln -s `pwd`/ccls /usr/bin/ccls
 
 # RUN echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
 # echo "deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
@@ -66,17 +36,17 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-lin
 RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
 
 # Install tmux
-# RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
-# wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz &&    \
-# mkdir tmux-unzipped &&    \
-# tar xf tmux-${TMUX_VERSION}.tar.gz -C tmux-unzipped &&     \
-# rm -f tmux-${TMUX_VERSION}.tar.gz &&       \
-# pushd tmux-unzipped/tmux-${TMUX_VERSION} &&        \
-# ./configure &&     \
-# make -j`nproc`&&        \
-# make install &&       \
-# popd &&        \
-# rm -rf tmux-unzipped"]
+RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
+wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz &&    \
+mkdir tmux-unzipped &&    \
+tar xf tmux-${TMUX_VERSION}.tar.gz -C tmux-unzipped &&     \
+rm -f tmux-${TMUX_VERSION}.tar.gz &&       \
+pushd tmux-unzipped/tmux-${TMUX_VERSION} &&        \
+./configure &&     \
+make -j`nproc`&&        \
+make install &&       \
+popd &&        \
+rm -rf tmux-unzipped"]
 # -----------
 
 # Install gtags
@@ -118,11 +88,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN echo "export LC_ALL=en_US.UTF-8" >> /etc/zsh/zshenv && echo "export LANG=en_US.UTF-8" >> /etc/zsh/zshenv
 
-# ARG USER_UID=1000
-# RUN echo $USER_UID
-# Add user "dev"
-# RUN useradd dev -m -u ${USER_UID} && echo "dev:dev" | chpasswd && usermod -aG sudo dev
-
 # change shell to zsh for user dev
 RUN chsh -s `which zsh` root
 
@@ -130,7 +95,12 @@ USER root
 WORKDIR /root/
 
 # Install yarn
-RUN curl -o- -L https://yarnpkg.com/install.sh | bash
+# Configure the Yarn repository
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+# Install Yarn
+RUN apt-get update && apt-get install -y yarn
 
 # Install oh-my-zsh
 RUN sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
@@ -188,23 +158,22 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/
 
 RUN conda install pip
 
-RUN apt-get update && apt-get install -y openssh-server
-RUN mkdir /var/run/sshd
-RUN echo 'root:aGVsbG9yaGlubw@2022' |chpasswd
-RUN sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
-RUN mkdir /root/.ssh
-EXPOSE 22
-CMD ["/usr/sbin/sshd", "-D"]
+# RUN apt-get update && apt-get install -y openssh-server
+# RUN mkdir /var/run/sshd
+# RUN echo 'root:aGVsbG9yaGlubw@2022' |chpasswd
+# RUN sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+# RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+# RUN mkdir /root/.ssh
+# EXPOSE 22
+# CMD ["/usr/sbin/sshd", "-D"]
 
 # Create python3.8
-RUN conda create -n d2 python=3.8 
+# RUN conda create -n d2 python=3.8
 
 # Make RUN commands use the new environment:
-SHELL ["conda", "run", "-n", "d2", "/bin/zsh", "-c"]
+# SHELL ["conda", "run", "-n", "d2", "/bin/zsh", "-c"]
 
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
-RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
+# RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
 
-# Install torch
-RUN python3 -m pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cu113
+CMD ["zsh"]
