@@ -9,7 +9,7 @@ export EDITOR=nvim
 export VISUAL=nvim
 export SUDO_EDITOR=nvim
 
-ZSH_THEME="simple"
+ZSH_THEME="robbyrussell"
 source $ZSH/oh-my-zsh.sh
 
 plugins=(
