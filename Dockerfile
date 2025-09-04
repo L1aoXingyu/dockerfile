@@ -123,26 +123,6 @@ RUN git clone --depth 1 https://github.com/junegunn/fzf.git /root/.fzf && /root/
 COPY default_clang_tidy /usr/share/default_clang_tidy
 COPY default_clang_format /usr/share/default_clang_format
 
-# Install miniconda
-ENV CONDA_DIR /root/miniconda
-RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-     /bin/bash ~/miniconda.sh -b -p /root/miniconda
-
-# Put conda in path so we can use conda activate
-ENV PATH=$CONDA_DIR/bin:$PATH
-RUN conda init zsh
-
-# Config conda channels
-RUN conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/ && \
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ && \
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/ && \
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
-
-# Update conda
-# RUN conda update -n base -c defaults conda
-
-RUN conda install pip
-
 # RUN apt-get update && apt-get install -y openssh-server
 # RUN mkdir /var/run/sshd
 # RUN echo 'root:aGVsbG9yaGlubw@2022' |chpasswd
@@ -152,13 +132,7 @@ RUN conda install pip
 # EXPOSE 22
 # CMD ["/usr/sbin/sshd", "-D"]
 
-# Create python3.8
-# RUN conda create -n d2 python=3.8
-
-# Make RUN commands use the new environment:
-# SHELL ["conda", "run", "-n", "d2", "/bin/zsh", "-c"]
-
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
 # RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
 
-# CMD ["zsh"]
+CMD ["zsh"]
