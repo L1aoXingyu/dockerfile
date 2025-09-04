@@ -1,10 +1,16 @@
-FROM nvidia/cuda:11.8.0-devel-ubuntu18.04
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+
+# ARG HTTP_PROXY=http://127.0.0.1:3890
+# ARG HTTPS_PROXY=http://127.0.0.1:3890
+# ARG NO_PROXY=localhost,127.0.0.1
+# 
+# ENV http_proxy=$HTTP_PROXY \
+#     https_proxy=$HTTPS_PROXY \
+#     no_proxy=$NO_PROXY
 
 # Uncomment it if you are in China
 RUN sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
-
-RUN rm /etc/apt/sources.list.d/cuda.list
 
 ENV DEBIAN_FRONTEND noninteractive
 # Add common tools available in apt repository. We choose not to support python2
@@ -12,7 +18,7 @@ RUN apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc g++ curl wget tar libevent-dev libncurses-dev clang lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-7-dev tree && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc-12 g++-12 curl wget tar libevent-dev libncurses-dev clang-12 clang-format-12 clang-tidy-12 lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-12-dev tree && \
     apt clean
 
 RUN locale-gen "en_US.UTF-8"
@@ -49,27 +55,6 @@ popd &&        \
 rm -rf tmux-unzipped"]
 # -----------
 
-# Install gtags
-# RUN ["/bin/bash", "-c", "GTAGS_VERSION=6.6.3 &&     \
-# wget http://tamacom.com/global/global-$GTAGS_VERSION.tar.gz &&  \
-# mkdir gtags-unzipped && \
-# tar xf global-$GTAGS_VERSION.tar.gz -C gtags-unzipped && \
-# pushd gtags-unzipped/global-$GTAGS_VERSION &&  \
-# ./configure &&  \
-# make && \
-# make install && \
-# popd && \
-# rm -rf gtags-unzipped"]
-
-# Install ctags
-# RUN ["/bin/bash", "-c", "git clone --depth 1 https://github.com/universal-ctags/ctags.git && \
-# cd ctags && \
-# ./autogen.sh  && \
-# ./configure && \
-# make -j$(nproc) && \
-# make install && \
-# rm -rf ctags"]
-
 RUN ["/bin/bash", "-c", "mkdir git-lfs && curl -L https://github.com/git-lfs/git-lfs/releases/download/v2.8.0/git-lfs-linux-amd64-v2.8.0.tar.gz | tar xzf - -C git-lfs && pushd git-lfs && ./install.sh && popd && rm -rf git-lfs"]
 
 COPY apply-format /usr/bin/
@@ -79,7 +64,7 @@ COPY install-clangformat-hook /usr/bin/
 COPY install-clangtidy-hook /usr/bin/
 
 # Install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_13.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 
 # Set timezone
@@ -176,4 +161,4 @@ RUN conda install pip
 # Install cmake via pip, install pygments for gtags, pynvim for neovim
 # RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
 
-CMD ["zsh"]
+# CMD ["zsh"]
