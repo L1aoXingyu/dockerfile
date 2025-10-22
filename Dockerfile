@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
 # ARG HTTP_PROXY=http://127.0.0.1:3890
 # ARG HTTPS_PROXY=http://127.0.0.1:3890
