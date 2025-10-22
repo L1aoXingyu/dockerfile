@@ -1,23 +1,16 @@
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
-# ARG HTTP_PROXY=http://127.0.0.1:3890
-# ARG HTTPS_PROXY=http://127.0.0.1:3890
-# ARG NO_PROXY=localhost,127.0.0.1
-# 
-# ENV http_proxy=$HTTP_PROXY \
-#     https_proxy=$HTTPS_PROXY \
-#     no_proxy=$NO_PROXY
-
 # Uncomment it if you are in China
 RUN sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 # Add common tools available in apt repository. We choose not to support python2
-RUN apt -o Acquire::http::proxy=false update && \
+RUN export HTTP_PROXY= HTTPS_PROXY= NO_PROXY= http_proxy= https_proxy= no_proxy= && \
+    apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
-    apt update && \
+    apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc-12 g++-12 curl wget tar libevent-dev libncurses-dev clang-12 clang-format-12 clang-tidy-12 lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-12-dev tree && \
     apt clean
 
@@ -26,7 +19,7 @@ RUN locale-gen "en_US.UTF-8"
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
 # Install Ninja
-RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip && unzip ninja-linux.zip -d ninja && cp ninja/ninja /usr/bin && rm -rf ninja
+RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip && unzip ninja-linux.zip -d ninja && cp ninja/ninja /usr/bin && rm -rf ninja-linux.zip ninja
 
 # RUN echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
 # echo "deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
@@ -39,7 +32,10 @@ RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-lin
 
 # RUN git config --global http.proxy xxx && git config --global https.proxy
 
-RUN wget https://github.com/neovim/neovim/releases/download/stable/nvim.appimage && chmod +x nvim.appimage && ./nvim.appimage --appimage-extract && chmod 755 -R squashfs-root && rm nvim.appimage && ln -s /squashfs-root/AppRun /usr/bin/nvim
+RUN add-apt-repository ppa:neovim-ppa/stable -y && \
+    apt -o Acquire::http::proxy=false update && \
+    apt -o Acquire::http::proxy=false install -y neovim && \
+    apt clean
 
 # Install tmux
 RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
@@ -88,7 +84,10 @@ RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources
 RUN apt-get update && apt-get install -y yarn
 
 # Install oh-my-zsh
-RUN sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+RUN wget -O /tmp/ohmyzsh.tar.gz https://codeload.github.com/ohmyzsh/ohmyzsh/tar.gz/refs/heads/master && \
+    mkdir -p /root/.oh-my-zsh && \
+    tar -xzf /tmp/ohmyzsh.tar.gz -C /root/.oh-my-zsh --strip-components=1 && \
+    rm /tmp/ohmyzsh.tar.gz
 
 # Install autosuggestions and syntax-highlighting
 RUN git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
