@@ -18,8 +18,33 @@ RUN locale-gen "en_US.UTF-8"
 
 RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
-# Install Ninja
-RUN wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip && unzip ninja-linux.zip -d ninja && cp ninja/ninja /usr/bin && rm -rf ninja-linux.zip ninja
+# Allow optional proxy build arguments for GitHub downloads.
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
+ARG NINJA_VERSION=1.11.1
+ARG NINJA_SHA256=b901ba96e486dce377f9a070ed4ef3f79deb45f4ffe2938f8e7ddc69cfb3df77
+
+# Install Ninja from GitHub with proxy support and checksum verification.
+RUN set -eux; \
+    http_proxy_value="${http_proxy:-${HTTP_PROXY:-}}"; \
+    https_proxy_value="${https_proxy:-${HTTPS_PROXY:-$http_proxy_value}}"; \
+    no_proxy_value="${no_proxy:-${NO_PROXY:-}}"; \
+    if [ -n "${http_proxy_value}${https_proxy_value}" ]; then \
+        export http_proxy="$http_proxy_value" HTTP_PROXY="$http_proxy_value"; \
+        export https_proxy="$https_proxy_value" HTTPS_PROXY="$https_proxy_value"; \
+        export no_proxy="$no_proxy_value" NO_PROXY="$no_proxy_value"; \
+    fi; \
+    curl -fL --retry 5 --retry-connrefused --retry-max-time 60 \
+      -o /tmp/ninja-linux.zip "https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-linux.zip"; \
+    echo "${NINJA_SHA256}  /tmp/ninja-linux.zip" | sha256sum -c -; \
+    unzip /tmp/ninja-linux.zip -d /usr/local/bin; \
+    chmod +x /usr/local/bin/ninja; \
+    rm -f /tmp/ninja-linux.zip
 
 # RUN echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
 # echo "deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
