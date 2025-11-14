@@ -136,6 +136,10 @@ RUN mkdir -p /root/.config/pip && \
 echo "[global]" >> /root/.config/pip/pip.conf && \
 echo "index-url = https://mirrors.ustc.edu.cn/pypi/web/simple" >> /root/.config/pip/pip.conf && \
 echo "format = columns" >> /root/.config/pip/pip.conf
+# Install uv for fast Python dependency management
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    install -Dm755 /root/.local/bin/uv /usr/local/bin/uv && \
+    if [ -f /root/.local/bin/uvx ]; then install -Dm755 /root/.local/bin/uvx /usr/local/bin/uvx; fi
 # -----------
 
 # Copy .zshrc
