@@ -1,24 +1,12 @@
-FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu22.04
 
-# Uncomment it if you are in China
-RUN sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
-RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+# Use USTC mirrors for apt (China)
+RUN sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Add common tools available in apt repository. We choose not to support python2
-RUN export HTTP_PROXY= HTTPS_PROXY= NO_PROXY= http_proxy= https_proxy= no_proxy= && \
-    apt -o Acquire::http::proxy=false update && \
-    apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
-    apt -o Acquire::http::proxy=false update && \
-    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc-12 g++-12 curl wget tar libevent-dev libncurses-dev clang-12 clang-format-12 clang-tidy-12 lld ccache nasm  unzip openjdk-8-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-12-dev tree && \
-    apt clean
 
-RUN locale-gen "en_US.UTF-8"
-
-RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-
-# Allow optional proxy build arguments for GitHub downloads.
+# Allow optional proxy build arguments for GitHub/external downloads.
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
@@ -26,19 +14,30 @@ ARG http_proxy
 ARG https_proxy
 ARG no_proxy
 
-ARG NINJA_VERSION=1.11.1
-ARG NINJA_SHA256=b901ba96e486dce377f9a070ed4ef3f79deb45f4ffe2938f8e7ddc69cfb3df77
+# Propagate proxy to all subsequent RUN steps via ENV.
+# Steps using domestic apt mirrors explicitly bypass proxy with -o Acquire::http::proxy=false.
+ENV http_proxy=${http_proxy:-${HTTP_PROXY}} \
+    https_proxy=${https_proxy:-${HTTPS_PROXY}} \
+    no_proxy=${no_proxy:-${NO_PROXY}}
 
-# Install Ninja from GitHub with proxy support and checksum verification.
+# Install common tools from domestic apt mirrors (bypass proxy)
+RUN export HTTP_PROXY= HTTPS_PROXY= NO_PROXY= http_proxy= https_proxy= no_proxy= && \
+    apt -o Acquire::http::proxy=false update && \
+    apt -o Acquire::http::proxy=false install -y apt-utils software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt -o Acquire::http::proxy=false update && \
+    apt -o Acquire::http::proxy=false install -y aria2 man telnet tmux locales pkg-config inetutils-ping net-tools git zsh thefuck mc sed ack-grep ranger htop silversearcher-ag python3 python3-dev build-essential autoconf automake libtool make gcc-14 g++-14 curl wget tar libevent-dev libncurses-dev lld ccache nasm unzip openjdk-21-jdk colordiff mlocate iftop libpulse-dev libv4l-dev python3-venv libcurl4-openssl-dev libopenblas-dev gdb texinfo libreadline-dev cmake valgrind tzdata zip libstdc++-14-dev tree && \
+    apt clean && rm -rf /var/lib/apt/lists/*
+
+RUN locale-gen "en_US.UTF-8"
+
+RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+
+ARG NINJA_VERSION=1.13.2
+ARG NINJA_SHA256=5749cbc4e668273514150a80e387a957f933c6ed3f5f11e03fb30955e2bbead6
+
+# Install Ninja with checksum verification
 RUN set -eux; \
-    http_proxy_value="${http_proxy:-${HTTP_PROXY:-}}"; \
-    https_proxy_value="${https_proxy:-${HTTPS_PROXY:-$http_proxy_value}}"; \
-    no_proxy_value="${no_proxy:-${NO_PROXY:-}}"; \
-    if [ -n "${http_proxy_value}${https_proxy_value}" ]; then \
-        export http_proxy="$http_proxy_value" HTTP_PROXY="$http_proxy_value"; \
-        export https_proxy="$https_proxy_value" HTTPS_PROXY="$https_proxy_value"; \
-        export no_proxy="$no_proxy_value" NO_PROXY="$no_proxy_value"; \
-    fi; \
     curl -fL --retry 5 --retry-connrefused --retry-max-time 60 \
       -o /tmp/ninja-linux.zip "https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-linux.zip"; \
     echo "${NINJA_SHA256}  /tmp/ninja-linux.zip" | sha256sum -c -; \
@@ -46,37 +45,29 @@ RUN set -eux; \
     chmod +x /usr/local/bin/ninja; \
     rm -f /tmp/ninja-linux.zip
 
-# RUN echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
-# echo "deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial main" >> /etc/apt/sources.list.d/clang.list && \
-# echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" >> /etc/apt/sources.list.d/clang.list && \
-# echo "deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" >> /etc/apt/sources.list.d/clang.list && \
-# echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" >> /etc/apt/sources.list.d/clang.list && \
-# echo "deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" >> /etc/apt/sources.list.d/clang.list
-#
-# RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - && apt -o Acquire::http::proxy=false update && apt install -y clang-format-8 clang-tidy-8 clang-tools-8 && cd /usr/bin && ln -s clangd-8 clangd && ln -s clang-tidy-8 clang-tidy && ln -s clang-tidy-diff-8.py clang-tidy-diff.py && ln -s clang-format-diff-8 clang-format-diff && ln -s clang-format-8 clang-format && apt clean
-
-# RUN git config --global http.proxy xxx && git config --global https.proxy
-
+# Install neovim
 RUN add-apt-repository ppa:neovim-ppa/stable -y && \
     apt -o Acquire::http::proxy=false update && \
     apt -o Acquire::http::proxy=false install -y neovim && \
-    apt clean
+    apt clean && rm -rf /var/lib/apt/lists/*
 
-# Install tmux
-RUN ["/bin/bash", "-c", "TMUX_VERSION=3.0a &&       \
-wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz &&    \
-mkdir tmux-unzipped &&    \
-tar xf tmux-${TMUX_VERSION}.tar.gz -C tmux-unzipped &&     \
-rm -f tmux-${TMUX_VERSION}.tar.gz &&       \
-pushd tmux-unzipped/tmux-${TMUX_VERSION} &&        \
-./configure &&     \
-make -j`nproc`&&        \
-make install &&       \
-popd &&        \
-rm -rf tmux-unzipped"]
-# -----------
+# Install tmux from source
+RUN TMUX_VERSION=3.6a && \
+    wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz && \
+    mkdir tmux-unzipped && \
+    tar xf tmux-${TMUX_VERSION}.tar.gz -C tmux-unzipped && \
+    rm -f tmux-${TMUX_VERSION}.tar.gz && \
+    cd tmux-unzipped/tmux-${TMUX_VERSION} && \
+    ./configure && \
+    make -j$(nproc) && \
+    make install && \
+    cd / && rm -rf tmux-unzipped
 
-RUN ["/bin/bash", "-c", "mkdir git-lfs && curl -L https://github.com/git-lfs/git-lfs/releases/download/v2.8.0/git-lfs-linux-amd64-v2.8.0.tar.gz | tar xzf - -C git-lfs && pushd git-lfs && ./install.sh && popd && rm -rf git-lfs"]
+# Install git-lfs
+RUN mkdir /tmp/git-lfs && \
+    curl -L https://github.com/git-lfs/git-lfs/releases/download/v3.7.1/git-lfs-linux-amd64-v3.7.1.tar.gz | tar xzf - -C /tmp/git-lfs && \
+    /tmp/git-lfs/install.sh && \
+    rm -rf /tmp/git-lfs
 
 COPY apply-format /usr/bin/
 COPY clangformat-git-hook /usr/bin/
@@ -84,9 +75,10 @@ COPY clangtidy-git-hook /usr/bin/
 COPY install-clangformat-hook /usr/bin/
 COPY install-clangtidy-hook /usr/bin/
 
-# Install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt-get install -y nodejs
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set timezone
 ENV TZ=Asia/Shanghai
@@ -94,19 +86,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN echo "export LC_ALL=en_US.UTF-8" >> /etc/zsh/zshenv && echo "export LANG=en_US.UTF-8" >> /etc/zsh/zshenv
 
-# change shell to zsh for user dev
-RUN chsh -s `which zsh` root
+RUN chsh -s $(which zsh) root
 
 USER root
 WORKDIR /root/
 
-# Install yarn
-# Configure the Yarn repository
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-
-# Install Yarn
-RUN apt-get update && apt-get install -y yarn
+# Install Yarn via corepack
+RUN corepack enable && corepack prepare yarn@stable --activate
 
 # Install oh-my-zsh
 RUN wget -O /tmp/ohmyzsh.tar.gz https://codeload.github.com/ohmyzsh/ohmyzsh/tar.gz/refs/heads/master && \
@@ -114,16 +100,15 @@ RUN wget -O /tmp/ohmyzsh.tar.gz https://codeload.github.com/ohmyzsh/ohmyzsh/tar.
     tar -xzf /tmp/ohmyzsh.tar.gz -C /root/.oh-my-zsh --strip-components=1 && \
     rm /tmp/ohmyzsh.tar.gz
 
-# Install autosuggestions and syntax-highlighting
-RUN git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-RUN git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+# Install zsh plugins
+RUN git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions && \
+    git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
 # Add nvim config to share config with vim
 RUN mkdir -p /root/.config/nvim/ && \
 echo "set runtimepath^=~/.vim runtimepath+=~/.vim/after" >> /root/.config/nvim/init.vim && \
 echo "let &packpath=&runtimepath" >> /root/.config/nvim/init.vim && \
 echo "source ~/.vimrc" >> /root/.config/nvim/init.vim
-# -----------
 
 COPY --chown=root:root .gitconfig /root/
 COPY --chown=root:root .vimrc /root/
@@ -131,36 +116,25 @@ COPY --chown=root:root .vimrc.local /root/
 COPY --chown=root:root coc-settings.json /root/.config/nvim/
 RUN mkdir -p /root/.vim/autoload
 
-# Set PyPI mirror
+# Set PyPI mirror (USTC)
 RUN mkdir -p /root/.config/pip && \
 echo "[global]" >> /root/.config/pip/pip.conf && \
 echo "index-url = https://mirrors.ustc.edu.cn/pypi/web/simple" >> /root/.config/pip/pip.conf && \
 echo "format = columns" >> /root/.config/pip/pip.conf
-# Install uv for fast Python dependency management
+
+# Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
     install -Dm755 /root/.local/bin/uv /usr/local/bin/uv && \
     if [ -f /root/.local/bin/uvx ]; then install -Dm755 /root/.local/bin/uvx /usr/local/bin/uvx; fi
-# -----------
 
-# Copy .zshrc
 COPY --chown=root:root .zshrc /root/.zshrc
-# Install fzf last so that the modified .zsrc will not be overwritted
+# Install fzf last so that .zshrc will not be overwritten
 RUN git clone --depth 1 https://github.com/junegunn/fzf.git /root/.fzf && /root/.fzf/install --key-bindings --completion --update-rc
-# -----------
 
 COPY default_clang_tidy /usr/share/default_clang_tidy
 COPY default_clang_format /usr/share/default_clang_format
 
-# RUN apt-get update && apt-get install -y openssh-server
-# RUN mkdir /var/run/sshd
-# RUN echo 'root:aGVsbG9yaGlubw@2022' |chpasswd
-# RUN sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-# RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
-# RUN mkdir /root/.ssh
-# EXPOSE 22
-# CMD ["/usr/sbin/sshd", "-D"]
-
-# Install cmake via pip, install pygments for gtags, pynvim for neovim
-# RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cmake pygments pynvim thefuck pylint flake8 autopep8 mypy ipdb gpustat opencv-python cython yacs termcolor tabulate gdown matplotlib
+# Clear proxy env from the final image
+ENV http_proxy= https_proxy= no_proxy=
 
 CMD ["zsh"]

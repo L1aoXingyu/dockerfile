@@ -12,7 +12,7 @@ docker build \
   --build-arg http_proxy=$PROXY \
   --build-arg https_proxy=$PROXY \
   --build-arg no_proxy=$NO_PROXY \
-  -t l1aoxingyu/lxy_dev:ubuntu22_cu128 .
+  -t l1aoxingyu/lxy_dev:ubuntu22_cu129 .
 
 docker run --privileged --name lxy_dev -d -v /mnt:/mnt -v /data:/data --gpus all --user root --ipc host --net host -it lxy_dev:v0.4
 ```
